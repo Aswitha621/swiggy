@@ -1,0 +1,109 @@
+import random
+
+# Define card suits and ranks
+suits = ['hearts', 'diamonds', 'clubs', 'spades']
+ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'jack', 'queen', 'king', 'ace']
+
+class Card:
+    def __init__(self, suit, rank):
+        self.suit = suit
+        self.rank = rank
+    
+    def __str__(self):
+        return self.rank + " of " + self.suit
+
+class Deck:
+    def __init__(self):
+        self.deck = []
+        for suit in suits:
+            for rank in ranks:
+                self.deck.append(Card(suit, rank))
+    
+    def shuffle(self):
+        random.shuffle(self.deck)
+        
+    def deal(self):
+        return self.deck.pop()
+
+class Player:
+    def __init__(self, name):
+        self.name = name
+        self.hand = []
+        self.score = 0
+    
+    def draw(self, deck):
+        self.hand.append(deck.deal())
+        
+    def play_card(self, card, discard_pile):
+        if card.suit == discard_pile[-1].suit or card.rank == discard_pile[-1].rank:
+            discard_pile.append(card)
+            self.hand.remove(card)
+            return True
+        else:
+            return False
+    
+    def has_cards(self):
+        return len(self.hand) > 0
+    
+    def add_score(self, points):
+        self.score += points
+
+def start_game():
+    # Initialize players
+    num_players = 4
+    players = []
+    for i in range(num_players):
+        name = input("Enter name for Player " + str(i+1) + ": ")
+        players.append(Player(name))
+    
+    # Initialize deck and discard pile
+    deck = Deck()
+    deck.shuffle()
+    discard_pile = [deck.deal()]
+    
+    # Deal cards to players
+    for i in range(5):
+        for player in players:
+            player.draw(deck)
+    
+    # Initialize game variables
+    current_player_idx = 0
+    direction = 1 # 1 for clockwise, -1 for counterclockwise
+    
+    # Start game loop
+    while True:
+        current_player = players[current_player_idx]
+        print("\n\nIt is " + current_player.name + "'s turn.")
+        print("Top card on discard pile is " + str(discard_pile[-1]))
+        print("Your hand is:")
+        for card in current_player.hand:
+            print(card)
+        
+        playable_cards = []
+        for card in current_player.hand:
+            if card.suit == discard_pile[-1].suit or card.rank == discard_pile[-1].rank:
+                playable_cards.append(card)
+        
+        if len(playable_cards) == 0:
+            print("You have no playable cards. Drawing from deck...")
+            current_player.draw(deck)
+            if len(deck.deck) == 0:
+                print("Deck is empty. Game is a draw.")
+                return
+        
+        else:
+            while True:
+                card_choice = input("Enter the number corresponding to the card you want to play (or 'draw' to draw a card): ")
+                if card_choice == 'draw':
+                    current_player.draw(deck)
+                    if len(deck.deck) == 0:
+                        print("Deck is empty. Game is a draw.")
+                        return
+                    else:
+                        break
+                else:
+                    try:
+                        card_choice = int(card_choice)
+                        if card_choice < 1 or card_choice > len(playable_cards):
+                            raise ValueError
+                        else:
